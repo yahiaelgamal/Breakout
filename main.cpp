@@ -16,24 +16,29 @@ void initBricks();
 void drawBricks();
 bool gameOver();
 bool bricksLeft();
+void specialKeys(int, int, int);
 // ################################### HEADERS END #############################
 
 // ################################### STRUCTS #################################
 struct Ball{
-    
+
     double x = 0;
     double y = 250;
     double side = 10;
     double angle = 90;
     bool used = true;
-    
+
     void applySpeed(){
         if (used){
-            y = y + sin(angle * PI / 180);
-            x = x + cos(angle * PI / 180);
+            double sinA = sin(angle * PI / 180);
+            double cosA = cos(angle * PI / 180);
+            
+            y = y + sinA/fabs(sinA) * sinA*sinA;
+            x = x + cosA/fabs(cosA) * cosA*cosA;
         }
     }
     void draw(){
+        glColor3f(0.5, 0.5,0.5);
         used = y > 0;
         if (used){
             glRectd(x-side/2, y-side/2, x+side/2, y+side/2);
@@ -43,12 +48,12 @@ struct Ball{
         printf("x: %.1f, y: %.1f ø:%.1f\n", x,y,angle);
     }
     void handleBoundaries(){
-        
+
         if (x >= 300 || x <= -300){
             angle =  180 - angle;
         }
         if (y >= 500){
-            angle *=-1;
+            angle *=360 - angle;
         }
     }
 };
@@ -59,10 +64,10 @@ struct Pad{
     double width = 100;
     double height = 10;
     void draw(){
-        
+
         glColor3f(0.5f, 0.5f, 0.5f);
         glRectd(center-width/2, y, center+width/2, y+height);
-        
+
     }
     bool isHit(Ball b){
         return  b.x <= center+width/2 && b.x >= center-width/2 &&
@@ -77,7 +82,7 @@ struct Brick{
     double y2;
     bool hit = false;
     float r=rand()+0.25,g=rand()+0.25,b=rand()+0.25;
-    
+
     void draw(){
         glColor3f(r, g, b);
         glRectd(x1, y1, x2, y2);
@@ -85,7 +90,7 @@ struct Brick{
     bool isHit(Ball b){
         int deltax[] = {1, 1, -1, -1};
         int deltay[] = {1, -1, 1, 1};
-        
+
         for (int i = 0; i < 4; i++){
             if (b.x + deltax[i] * b.side/2 <= x2
                 && b.x + deltax[i] * b.side/2 >=x1
@@ -116,7 +121,7 @@ bool over=false;
 bool gameOver(){
     if (over)
         return true;
-    if ((!ball1.used && !ball2.used )){
+    if ((!ball1.used || !ball2.used )){
         printf("score is %d, Time is %f FINAL:%f\n", score, secs, score/secs);
         glClearColor(1.0f,0.0f,0.0f,0.0f);
         over = true;
@@ -129,7 +134,7 @@ bool gameOver(){
 }
 
 bool bricksLeft(){
-    
+
     for (int i = 0; i < HEIGHT; i++)
     {
         for (int j = 0; j < WIDTH; j++){
@@ -162,14 +167,14 @@ void initBricks(){
             bricks[i][j].y1 = starty - i * 20;
             bricks[i][j].x2 = startx + j * 60 + 55;
             bricks[i][j].y2 = starty - (i * 20 + 17);
-            
-            
+
+
             bricks[i][j].r = (double)rand()/0xF0000000 + 0.25;
             bricks[i][j].g = (double)rand()/0xF0000000 + 0.25;
             bricks[i][j].b = (double)rand()/0xF0000000 + 0.25;
         }
     }
-    
+
     bricks[7][5].hit = false;
 }
 
@@ -181,16 +186,17 @@ int main(int argc,char** argr){
 	glutCreateWindow("Break out");
 	glutDisplayFunc(display);
 	glutKeyboardFunc(myKeyboard);
+    glutSpecialFunc(specialKeys);
     //	glutMouseFunc(myMouse);
     glutPassiveMotionFunc(myMouse);
 	glutIdleFunc(anim);
 	glClearColor(0.0f,0.0f,0.0f,0.0f);
 	gluOrtho2D(-300,300.0,0.0,500.0);
     initBricks();
-    
+
     pad2.y = 25;
 	glutMainLoop();
-    
+
     return 0;
 }
 
@@ -203,10 +209,10 @@ void display(){
         pad1.draw();
         pad2.draw();
         drawBricks();
-        
+
         ball1.handleBoundaries();
         ball2.handleBoundaries();
-        
+
         glPopMatrix();
         glFlush();
     }else
@@ -223,12 +229,12 @@ void drawBricks(){
                     bricks[i][j].hit = true;
                     hit = 1;
                     score++;
-                    //                    printf("Score is %d\n", score);
+//                    printf("Score is %d\n", score);
                 }else if (bricks[i][j].isHit(ball2)){
                     bricks[i][j].hit = true;
                     hit = 2;
                     score++;
-                    //                    printf("Score is %d\n", score);
+//                    printf("Score is %d\n", score);
                 }
                 else {
                     bricks[i][j].draw();
@@ -236,30 +242,51 @@ void drawBricks(){
             }
         }
     }
+    
     switch (hit){
         case 0:
             break;
         case 1:
-            // ball1.angle = ball1.angle + 180;
-            ball1.angle = -1*ball1.angle;
+            if (ball1.angle > 270)
+                ball1.angle = 180 + (360-ball1.angle);
+            else if (ball1.angle > 180)
+                ball1.angle = 360 - (270-ball1.angle);
+            else
+                ball1.angle = 360 - ball1.angle;
             break;
         case 2:
-            //ball2.angle = ball2.angle + 180;
-            ball2.angle = -1*ball2.angle;
+
+            if (ball2.angle > 270)
+                ball2.angle = 180 + (360-ball2.angle);
+            else if (ball2.angle > 180)
+                ball2.angle = 360 - (270-ball2.angle);
+            else
+                ball2.angle = 360 - ball2.angle;
+            
             break;
     }
-    
+
+}
+
+void specialKeys(int key, int x, int y)
+{
+    switch (key) {
+       case GLUT_KEY_LEFT :  pad1.center -= 10;  break;
+       case GLUT_KEY_RIGHT:  pad1.center += 10;  break;
+    }
+
+    glutPostRedisplay();
 }
 
 void myKeyboard(unsigned char thekey,int mouseX,int mouseY){
     switch(thekey){
         case 'h':
-            pad1.center -= 5;
+            pad1.center -= 10;
             break;
         case 'l':
-            pad1.center += 5;
+            pad1.center += 10;
             break;
-            
+
     }
     glutPostRedisplay();
 }
@@ -270,17 +297,17 @@ void myMouse(int x, int y){
 
 void anim(){
     if (!gameOver()){
-        for (int i = 0; i <1e2; i++){ }
-        secs+=0.01f;
+        for (int i = 0; i <2e2; i++){};
+        secs+=0.005f;
         ball1.applySpeed();
         ball2.applySpeed();
-        
+
         if (pad2.isHit(ball1)){
             ball1.angle = 90 - 90.0 * (ball1.x-(pad2.center))/pad2.width;
         }else if (pad1.isHit(ball1)){
             ball1.angle = 90 - 90.0 * (ball1.x-(pad1.center))/pad1.width;
         }
-        
+
         if (pad2.isHit(ball2)){
             ball2.angle = 90 - 90.0 * (ball2.x-(pad2.center))/pad2.width;
         }else if (pad1.isHit(ball2)){
