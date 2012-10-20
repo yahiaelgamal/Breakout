@@ -53,7 +53,7 @@ struct Ball{
             angle =  180 - angle;
         }
         if (y >= 500){
-            angle *=360 - angle;
+            angle =360 - angle;
         }
     }
 };
@@ -70,8 +70,10 @@ struct Pad{
 
     }
     bool isHit(Ball b){
-        return  b.x <= center+width/2 && b.x >= center-width/2 &&
-        b.y >= y && b.y <= y+height;
+        return  b.x-b.side <= center+width/2 &&
+                b.x+b.side >= center-width/2 &&
+                b.y >= y &&
+                b.y <= y+height;
     }
 };
 
@@ -242,7 +244,6 @@ void drawBricks(){
             }
         }
     }
-    
     switch (hit){
         case 0:
             break;
@@ -254,6 +255,7 @@ void drawBricks(){
             else
                 ball1.angle = 360 - ball1.angle;
             break;
+//            printf("angle1 %f\n", ball1.angle);
         case 2:
 
             if (ball2.angle > 270)
@@ -263,6 +265,7 @@ void drawBricks(){
             else
                 ball2.angle = 360 - ball2.angle;
             
+//            printf("angle1 %f\n", ball2.angle);
             break;
     }
 
@@ -303,14 +306,18 @@ void anim(){
         ball2.applySpeed();
 
         if (pad2.isHit(ball1)){
+//            printf("angle1 %f\n", ball1.angle);
             ball1.angle = 90 - 90.0 * (ball1.x-(pad2.center))/pad2.width;
         }else if (pad1.isHit(ball1)){
+//            printf("angle1 %f\n", ball1.angle);
             ball1.angle = 90 - 90.0 * (ball1.x-(pad1.center))/pad1.width;
         }
 
         if (pad2.isHit(ball2)){
+//            printf("angle2 %f\n", ball2.angle);
             ball2.angle = 90 - 90.0 * (ball2.x-(pad2.center))/pad2.width;
         }else if (pad1.isHit(ball2)){
+//            printf("angle2 %f\n", ball2.angle);
             ball2.angle = 90 - 90.0 * (ball2.x-(pad1.center))/pad1.width;
         }
         glutPostRedisplay();
