@@ -32,7 +32,7 @@ struct Ball{
         if (used){
             double sinA = sin(angle * PI / 180);
             double cosA = cos(angle * PI / 180);
-            
+
             y = y + sinA/fabs(sinA) * sinA*sinA;
             x = x + cosA/fabs(cosA) * cosA*cosA;
         }
@@ -264,7 +264,7 @@ void drawBricks(){
                 ball2.angle = 360 - (270-ball2.angle);
             else
                 ball2.angle = 360 - ball2.angle;
-            
+
 //            printf("angle1 %f\n", ball2.angle);
             break;
     }
